@@ -7,6 +7,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $whatsapp = trim($_POST["whatsapp"]);
 
     if (!empty($name) && !empty($email) && !empty($whatsapp)) {
+        // Cek apakah email sudah ada
+        $stmt = $conn->prepare("SELECT id FROM buyers WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            header("Location: ../index.html?status=email_exists");
+            exit();
+        }
+
+        // Cek apakah WhatsApp sudah ada
+        $stmt = $conn->prepare("SELECT id FROM buyers WHERE whatsapp = ?");
+        $stmt->bind_param("s", $whatsapp);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            header("Location: ../index.html?status=whatsapp_exists");
+            exit();
+        }
+
+        // Jika email & whatsapp belum ada, simpan ke database
         $stmt = $conn->prepare("INSERT INTO buyers (name, email, whatsapp) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $name, $email, $whatsapp);
 

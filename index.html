@@ -448,38 +448,42 @@
                         </li>
                     </ul>
                 </div>
+
                 <div class="bg-gray-100 shadow-lg rounded-lg mx-9 justify-center p-6 mt-10">
                     <h2 class="text-2xl font-bold mb-4 text-center">Form Pembelian</h2>
-                    <form id="buyerForm" action="./includes/save_from.php" method="POST" class="space-y-4" x-data="{ 
-                        name: '', email: '', whatsapp: '', 
-                        errors: { name: '', email: '', whatsapp: '' } 
-                    }" @submit.prevent="validateForm">
-                    
-                    <!-- Nama -->
-                    <div>
-                        <label class="block font-bold">Nama</label>
-                        <input type="text" name="name" class="w-full border p-2 rounded-lg" x-model="name">
-                        <p class="text-red-500 text-sm" x-text="errors.name"></p>
-                    </div>
+                    <form id="buyerForm" action="./includes/save_from.php" method="POST" class="space-y-4"
+                        x-data="buyerFormData()" @submit.prevent="validateForm">
                 
-                    <!-- Email -->
-                    <div>
-                        <label class="block font-bold">Email</label>
-                        <input type="email" name="email" class="w-full border p-2 rounded-lg" x-model="email">
-                        <p class="text-red-500 text-sm" x-text="errors.email"></p>
-                    </div>
+                        <!-- Nama -->
+                        <div>
+                            <label class="block font-bold">Nama</label>
+                            <input type="text" name="name" class="w-full border p-2 rounded-lg" x-model="name">
+                            <p class="text-red-500 text-sm" x-show="errors.name" x-text="errors.name"></p>
+                        </div>
                 
-                    <!-- Nomor WhatsApp -->
-                    <div>
-                        <label class="block font-bold">Nomor WhatsApp</label>
-                        <input type="text" name="whatsapp" class="w-full border p-2 rounded-lg" x-model="whatsapp">
-                        <p class="text-red-500 text-sm" x-text="errors.whatsapp"></p>
-                    </div>
+                        <!-- Email -->
+                        <div>
+                            <label class="block font-bold">Email</label>
+                            <input type="email" name="email" class="w-full border p-2 rounded-lg" x-model="email" 
+                                @input="checkEmail()">
+                            <p class="text-red-500 text-sm" x-show="errors.email" x-text="errors.email"></p>
+                            <p class="text-red-500 text-sm" x-show="emailExists">Email sudah digunakan!</p>
+                        </div>
                 
-                    <button type="submit" class="block mt-10 bg-green-500 hover:bg-green-600 
-                    rounded-lg mx-auto text-white font-semibold px-4 py-2 w-full">Kirim</button>
-                </form>
-                </div>               
+                        <!-- Nomor WhatsApp -->
+                        <div>
+                            <label class="block font-bold">Nomor WhatsApp</label>
+                            <input type="text" name="whatsapp" class="w-full border p-2 rounded-lg" x-model="whatsapp" 
+                                @input="checkWhatsApp()">
+                            <p class="text-red-500 text-sm" x-show="errors.whatsapp" x-text="errors.whatsapp"></p>
+                            <p class="text-red-500 text-sm" x-show="whatsappExists">Nomor WhatsApp sudah digunakan!</p>
+                        </div>
+                
+                        <button type="submit" class="block mt-10 bg-green-500 hover:bg-green-600 
+                        rounded-lg mx-auto text-white font-semibold px-4 py-2 w-full">Kirim</button>
+                    </form>
+                </div>
+
                 <div class="mt-10 text-center">
                     <i class="bi bi-exclamation-triangle-fill text-yellow-300 text-2xl"></i>
                 </div>
@@ -515,24 +519,52 @@
 </body>
 
 <script>
-    function validateForm() {
-        this.errors = { name: '', email: '', whatsapp: '' };
-
-        if (!this.name.trim()) {
-            this.errors.name = 'Nama wajib diisi!';
-        }
-        if (!this.email.trim()) {
-            this.errors.email = 'Email wajib diisi!';
-        }
-        if (!this.whatsapp.trim()) {
-            this.errors.whatsapp = 'Nomor WhatsApp wajib diisi untuk kirim file!';
-        }
-
-        // Jika tidak ada error, submit form
-        if (!this.errors.name && !this.errors.email && !this.errors.whatsapp) {
-            document.getElementById("buyerForm").submit();
-        }
-    }
-</script>
+    document.addEventListener("alpine:init", () => {
+        Alpine.data("buyerFormData", () => ({
+            name: '', 
+            email: '', 
+            whatsapp: '', 
+            errors: { name: '', email: '', whatsapp: '' }, 
+            emailExists: false, 
+            whatsappExists: false,
+    
+            validateForm() {
+                this.errors = { name: '', email: '', whatsapp: '' };
+    
+                if (!this.name.trim()) {
+                    this.errors.name = 'Nama wajib diisi!';
+                }
+                if (!this.email.trim()) {
+                    this.errors.email = 'Email wajib diisi!';
+                }
+                if (!this.whatsapp.trim()) {
+                    this.errors.whatsapp = 'Nomor WhatsApp wajib diisi!';
+                }
+    
+                if (!this.errors.name && !this.errors.email && !this.errors.whatsapp && 
+                    !this.emailExists && !this.whatsappExists) {
+                    document.getElementById("buyerForm").submit();
+                }
+            },
+    
+            checkEmail() {
+                if (!this.email.trim()) return;
+    
+                fetch(`./includes/check_unique.php?email=${this.email}`)
+                    .then(response => response.json())
+                    .then(data => this.emailExists = data.exists);
+            },
+    
+            checkWhatsApp() {
+                if (!this.whatsapp.trim()) return;
+    
+                fetch(`./includes/check_unique.php?whatsapp=${this.whatsapp}`)
+                    .then(response => response.json())
+                    .then(data => this.whatsappExists = data.exists);
+            }
+        }));
+    });
+    </script>
+    
 
 </html>
