@@ -17,8 +17,8 @@ $result = $stmt->get_result();
 $admin = $result->fetch_assoc();
 $adminName = $admin['username'];
 
-// Ambil daftar pembeli dari database
-$buyers = $conn->query("SELECT * FROM buyers ORDER BY id DESC");
+// Ambil daftar transaksi dari database
+$transactions = $conn->query("SELECT * FROM transaksi ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -37,17 +37,18 @@ $buyers = $conn->query("SELECT * FROM buyers ORDER BY id DESC");
             <p class="text-center text-gray-300">Halo, <?= htmlspecialchars($adminName) ?>!</p>
 
             <nav>
-                <!-- Garis Pembatas -->
                 <hr class="border-gray-600 mt-10">
                 <a href="dashboard.php" class="block py-2.5 px-4 hover:bg-gray-700 rounded">
-                    <i class="bi bi-list-task mr-2"></i> Daftar Pembeli
+                    <i class="bi bi-list-task mr-2"></i> Daftar Transaksi
                 </a>
-                <!-- Garis Pembatas -->
+                <hr class="border-gray-600">
+                <a href="edit_profile.php" class="block py-2.5 px-4 hover:bg-gray-700 rounded">
+                    <i class="bi bi-person mr-2"></i> Edit Profil
+                </a>
                 <hr class="border-gray-600">
                 <a href="logout.php" class="block py-2.5 px-4 hover:bg-gray-700 rounded">
                     <i class="bi bi-box-arrow-right mr-2"></i> Logout
                 </a>
-                <!-- Garis Pembatas -->
                 <hr class="border-gray-600">
             </nav>
         </div>
@@ -56,12 +57,13 @@ $buyers = $conn->query("SELECT * FROM buyers ORDER BY id DESC");
         <div class="sm:hidden w-full absolute bg-gray-800 text-white" x-show="open">
             <nav class="space-y-2 p-4">
                 <a href="dashboard.php" class="block py-2 px-4 hover:bg-gray-700 rounded">
-                    <i class="bi bi-list-task mr-2"></i> Daftar Pembeli
+                    <i class="bi bi-list-task mr-2"></i> Daftar Transaksi
                 </a>
-
-                <!-- Garis Pembatas -->
                 <hr class="border-gray-600 my-4">
-
+                <a href="edit_profile.php" class="block py-2 px-4 hover:bg-gray-700 rounded">
+                    <i class="bi bi-box-arrow-right mr-2"></i> Edit Profile
+                </a>
+                <hr class="border-gray-600 my-4">
                 <a href="logout.php" class="block py-2 px-4 hover:bg-gray-700 rounded">
                     <i class="bi bi-box-arrow-right mr-2"></i> Logout
                 </a>
@@ -81,46 +83,62 @@ $buyers = $conn->query("SELECT * FROM buyers ORDER BY id DESC");
             </header>
 
             <div class="p-6">
-                <h2 class="text-2xl font-bold mb-4">Daftar Pembeli</h2>
+                <h2 class="text-2xl font-bold mb-4">Daftar Transaksi</h2>
                 <div class="bg-white p-4 shadow-md rounded-lg">
-                    <table class="w-full border-collapse border border-gray-300">
-                        <thead>
-                            <tr class="bg-gray-800 text-white">
-                                <th class="border p-2">No</th>
-                                <th class="border p-2">Nama</th>
-                                <th class="border p-2">Email</th>
-                                <th class="border p-2">Nomor WhatsApp</th>
-                                <th class="border p-2">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if ($buyers->num_rows > 0): ?>
-                                <?php $no = 1; while ($row = $buyers->fetch_assoc()): ?>
-                                    <tr class="text-center">
-                                        <td class="border p-2"><?= $no++ ?></td>
-                                        <td class="border p-2"><?= htmlspecialchars($row['name']) ?></td>
-                                        <td class="border p-2"><?= htmlspecialchars($row['email']) ?></td>
-                                        <td class="border p-2"><?= htmlspecialchars($row['whatsapp']) ?></td>
-                                        <td class="border p-2 text-center">
-                                            <a href="../includes/delete_buyer.php?id=<?= $row['id']; ?>" 
-                                            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                            onclick="return confirm('Yakin ingin menghapus pembeli ini?');">
-                                            <i class="bi bi-trash"></i> Hapus
-                                            </a>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="4" class="border p-4 text-center text-gray-500">Belum ada pembeli.</td>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300 text-sm sm:text-base">
+                            <thead>
+                                <tr class="bg-gray-800 text-white">
+                                    <th class="border p-2">No</th>
+                                    <th class="border p-2">Order ID</th>
+                                    <th class="border p-2">Nama</th>
+                                    <th class="border p-2">Email</th>
+                                    <th class="border p-2">Nomor WhatsApp</th>
+                                    <th class="border p-2">Total Harga</th>
+                                    <th class="border p-2">Status Pembayaran</th>
+                                    <th class="border p-2">Tanggal</th>
+                                    <th class="border p-2">Aksi</th>
                                 </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php if ($transactions->num_rows > 0): ?>
+                                    <?php $no = 1; while ($row = $transactions->fetch_assoc()): ?>
+                                        <tr class="text-center">
+                                            <td class="border p-2"><?= $no++ ?></td>
+                                            <td class="border p-2"><?= htmlspecialchars($row['order_id']) ?></td>
+                                            <td class="border p-2"><?= htmlspecialchars($row['nama']) ?></td>
+                                            <td class="border p-2"><?= htmlspecialchars($row['email']) ?></td>
+                                            <td class="border p-2"><?= htmlspecialchars($row['no_wa']) ?></td>
+                                            <td class="border p-2">Rp<?= number_format($row['total_harga'], 0, ',', '.') ?></td>
+                                            <td class="border p-2">
+                                                <span class="px-2 py-1 rounded text-white 
+                                                    <?php if ($row['status_pembayaran'] == 'Success') echo 'bg-green-500'; ?>
+                                                    <?php if ($row['status_pembayaran'] == 'Pending') echo 'bg-orange-500'; ?>
+                                                    <?php if ($row['status_pembayaran'] == 'Failed') echo 'bg-red-500'; ?>">
+                                                    <?= htmlspecialchars($row['status_pembayaran']) ?>
+                                                </span>
+                                            </td>
+                                            <td class="border p-2"><?= htmlspecialchars($row['tanggal']) ?></td>
+                                            <td class="border p-2 text-center">
+                                                <a href="../includes/delete_transaction.php?id=<?= $row['id']; ?>" 
+                                                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-xs sm:text-sm"
+                                                onclick="return confirm('Yakin ingin menghapus transaksi ini?');">
+                                                    <i class="bi bi-trash"></i> Hapus
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="9" class="border p-4 text-center text-gray-500">Belum ada transaksi.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-        
     </div>
 </body>
 </html>

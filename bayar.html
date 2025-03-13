@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pembayaran Midtrans</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-DKh5oTe_dFSj00hY"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  </head>
+  <body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="p-6 bg-white shadow-lg rounded-lg w-96" x-data="payment">
+      <h2 class="text-xl font-bold text-center mb-4">Pembayaran</h2>
+
+      <!-- Form Input -->
+      <div>
+        <label class="block">Nama</label>
+        <input type="text" x-model="name" class="w-full p-2 border rounded mt-1" />
+        <p class="text-red-500 text-sm" x-show="errorName">Nama wajib diisi.</p>
+      </div>
+      <div class="mt-3">
+        <label class="block">Email</label>
+        <input type="email" x-model="email" @input="checkUser()" class="w-full p-2 border rounded mt-1" />
+        <p class="text-red-500 text-sm" x-show="errorEmail">Email wajib diisi.</p>
+        <p class="text-red-500 text-sm" x-show="emailExists">Email sudah digunakan.</p>
+      </div>
+      <div class="mt-3">
+        <label class="block">Nomor WhatsApp</label>
+        <input type="text" x-model="phone" @input="checkUser()" class="w-full p-2 border rounded mt-1" />
+        <p class="text-red-500 text-sm" x-show="errorPhone">Nomor WA wajib diisi.</p>
+        <p class="text-red-500 text-sm" x-show="phoneExists">Nomor WA sudah digunakan.</p>
+      </div>
+
+      <!-- Switch Pilihan Extra -->
+      <div class="mt-4 p-4 bg-yellow-200 border-2 border-dashed border-red-500 rounded-lg">
+        <label class="flex items-center space-x-3 cursor-pointer">
+          <input type="checkbox" x-model="extraBundle" class="hidden" />
+          <span class="relative inline-block w-10 h-6 transition bg-gray-300 rounded-full" :class="extraBundle ? 'bg-green-500' : ''">
+            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition transform" :class="extraBundle ? 'translate-x-4' : ''"></span>
+          </span>
+          <span class="text-sm font-medium"> Centang Tambah Rp.50rb untuk mendapatkan extra 3500+ Slide Infographic PowerPoint Bundle Template dan 2000+ Powerpoint Template Business Marketing Sales Reports </span>
+        </label>
+      </div>
+
+      <!-- Rincian Pesanan -->
+      <div class="mt-4 p-4 bg-white border rounded-lg shadow">
+        <h3 class="text-lg font-semibold border-b pb-2">RINCIAN PESANAN:</h3>
+        <ul class="mt-2">
+          <li class="flex justify-between border-b py-1">
+            <span>Pro Master Digital</span>
+            <span>Rp 99.000</span>
+          </li>
+          <template x-if="extraBundle">
+            <li class="flex justify-between border-b py-1 text-sm">
+              <span
+                >3500+ Slide Infographic PowerPoint Bundle <br />
+                & 2000+ PowerPoint Business Templates</span
+              >
+              <span>Rp 50.000</span>
+            </li>
+          </template>
+          <li class="flex justify-between font-semibold text-lg mt-2">
+            <span>Total</span>
+            <span>Rp <span x-text="formattedTotal()"></span></span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tombol Pembayaran -->
+      <button @click="processPayment()" class="mt-4 w-full bg-blue-600 text-white p-2 rounded">Bayar Sekarang</button>
+    </div>
+
+    <div
+      x-data="{ status: '', showNotification: false }"
+      x-init="() => {
+       let orderId = localStorage.getItem('order_id');
+       if (orderId) {
+         fetch(`includes/checkStatus.php?order_id=${orderId}`)
+           .then(res => res.json())
+           .then(data => {
+             if (data.status) {
+               status = data.status;
+               showNotification = true;
+               if (status === 'Success') {
+                 localStorage.removeItem('order_id'); // Hapus jika sukses
+               }
+             }
+           });
+       }
+     }"
+      x-show="showNotification"
+      class="fixed top-5 right-5 bg-green-500 text-white p-4 rounded shadow-lg"
+    >
+      <span x-text="'Status Pembayaran: ' + status"></span>
+    </div>
+
+    <script>
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("payment", () => ({
+          name: "",
+          email: "",
+          phone: "",
+          extraBundle: false,
+          errors: { email: "", phone: "" },
+
+          formattedTotal() {
+            return this.extraBundle ? "149.000" : "99.000";
+          },
+
+          async processPayment() {
+            this.errors = { email: "", phone: "" }; // Reset error sebelum cek
+
+            if (!this.name || !this.email || !this.phone) {
+              alert("Harap isi semua data!");
+              return;
+            }
+
+            // Cek apakah email atau nomor WA sudah digunakan
+            let checkResponse = await fetch("includes/checkUser.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: this.email, phone: this.phone }),
+            });
+
+            let checkData = await checkResponse.json();
+            console.log("Cek User:", checkData); // Debugging di console
+
+            if (checkData.emailExists) this.errors.email = "Email sudah digunakan!";
+            if (checkData.phoneExists) this.errors.phone = "Nomor WhatsApp sudah digunakan!";
+
+            // Jika ada error, hentikan proses pembayaran
+            if (checkData.emailExists || checkData.phoneExists) return;
+
+            // Jika email dan nomor WA belum digunakan, lanjutkan pembayaran
+            let response = await fetch("includes/placeOrder.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: this.name,
+                email: this.email,
+                phone: this.phone,
+                extra_bundle: this.extraBundle,
+              }),
+            });
+
+            let data = await response.json();
+            console.log("Response Midtrans:", data);
+
+            if (data.snapToken) {
+              localStorage.setItem("order_id", data.order_id);
+              window.snap.pay(data.snapToken, {
+                onSuccess: function () {
+                  window.location.reload();
+                },
+                onPending: function () {
+                  window.location.reload();
+                },
+                onError: function () {
+                  alert("Pembayaran gagal. Silakan coba lagi.");
+                },
+              });
+            } else {
+              alert("Terjadi kesalahan, coba lagi!");
+            }
+          },
+        }));
+      });
+    </script>
+  </body>
+</html>

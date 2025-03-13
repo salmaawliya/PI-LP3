@@ -13,7 +13,7 @@ if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     
     // Hapus dari database
-    $stmt = $conn->prepare("DELETE FROM buyers WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM transaksi WHERE id = ?");
     $stmt->bind_param("i", $id);
     if ($stmt->execute()) {
         header("Location: ../admin/dashboard.php?success=deleted");

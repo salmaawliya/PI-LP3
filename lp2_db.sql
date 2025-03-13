@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 04, 2025 at 09:30 AM
+-- Generation Time: Mar 13, 2025 at 10:33 AM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.2
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `landing_page_db`
+-- Database: `lp2_db`
 --
 
 -- --------------------------------------------------------
@@ -39,21 +39,31 @@ CREATE TABLE `admin_users` (
 --
 
 INSERT INTO `admin_users` (`id`, `username`, `email`, `password`) VALUES
-(1, 'admin1', 'admin1@gmail.com', '$2y$10$pKBAPHHZ4n5HdDXeKDWUtuQf3L2GTqlLIex0exyYMM0gEqDUN0gYW');
+(2, 'admin1', 'admin1@gmail.com', '$2y$10$zZOhhbNVAak4PFnBrWIHVOkEN5FiyOqINpGmR0DR55fq9v/8eYl9u');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `buyers`
+-- Table structure for table `transaksi`
 --
 
-CREATE TABLE `buyers` (
+CREATE TABLE `transaksi` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `whatsapp` varchar(20) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `order_id` varchar(50) DEFAULT NULL,
+  `nama` varchar(100) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `no_wa` varchar(20) DEFAULT NULL,
+  `total_harga` int(11) DEFAULT NULL,
+  `status_pembayaran` enum('Pending','Success','Failed') DEFAULT 'Pending',
+  `tanggal` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `transaksi`
+--
+
+INSERT INTO `transaksi` (`id`, `order_id`, `nama`, `email`, `no_wa`, `total_harga`, `status_pembayaran`, `tanggal`) VALUES
+(13, 'ORDER-1741858260', 'Salma', 'salma03an@gmail.com', '0895325575616', 149000, 'Success', '2025-03-13 09:31:00');
 
 --
 -- Indexes for dumped tables
@@ -68,12 +78,13 @@ ALTER TABLE `admin_users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- Indexes for table `buyers`
+-- Indexes for table `transaksi`
 --
-ALTER TABLE `buyers`
+ALTER TABLE `transaksi`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_email` (`email`),
-  ADD UNIQUE KEY `unique_whatsapp` (`whatsapp`);
+  ADD UNIQUE KEY `order_id` (`order_id`),
+  ADD UNIQUE KEY `unique_nama` (`no_wa`),
+  ADD UNIQUE KEY `unique_email` (`email`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -83,13 +94,13 @@ ALTER TABLE `buyers`
 -- AUTO_INCREMENT for table `admin_users`
 --
 ALTER TABLE `admin_users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `buyers`
+-- AUTO_INCREMENT for table `transaksi`
 --
-ALTER TABLE `buyers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+ALTER TABLE `transaksi`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
