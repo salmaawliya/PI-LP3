@@ -31,34 +31,17 @@
         <p class="text-red-500 text-sm" x-show="phoneExists">Nomor WA sudah digunakan.</p>
       </div>
 
-      <!-- Switch Pilihan Extra -->
-      <div class="mt-4 p-4 bg-yellow-200 border-2 border-dashed border-red-500 rounded-lg">
-        <label class="flex items-center space-x-3 cursor-pointer">
-          <input type="checkbox" x-model="extraBundle" class="hidden" />
-          <span class="relative inline-block w-10 h-6 transition bg-gray-300 rounded-full" :class="extraBundle ? 'bg-green-500' : ''">
-            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition transform" :class="extraBundle ? 'translate-x-4' : ''"></span>
-          </span>
-          <span class="text-sm font-medium"> Centang Tambah Rp.50rb untuk mendapatkan extra 3500+ Slide Infographic PowerPoint Bundle Template dan 2000+ Powerpoint Template Business Marketing Sales Reports </span>
-        </label>
-      </div>
-
       <!-- Rincian Pesanan -->
       <div class="mt-4 p-4 bg-white border rounded-lg shadow">
         <h3 class="text-lg font-semibold border-b pb-2">RINCIAN PESANAN:</h3>
         <ul class="mt-2">
           <li class="flex justify-between border-b py-1">
-            <span>Pro Master Digital</span>
-            <span>Rp 99.000</span>
+            <span
+              >Digital Satu Persen<br />
+              | NR HOUSE</span
+            >
+            <span>Rp 649.000</span>
           </li>
-          <template x-if="extraBundle">
-            <li class="flex justify-between border-b py-1 text-sm">
-              <span
-                >3500+ Slide Infographic PowerPoint Bundle <br />
-                & 2000+ PowerPoint Business Templates</span
-              >
-              <span>Rp 50.000</span>
-            </li>
-          </template>
           <li class="flex justify-between font-semibold text-lg mt-2">
             <span>Total</span>
             <span>Rp <span x-text="formattedTotal()"></span></span>
@@ -100,22 +83,17 @@
           name: "",
           email: "",
           phone: "",
-          extraBundle: false,
-          errors: { email: "", phone: "" },
 
           formattedTotal() {
-            return this.extraBundle ? "149.000" : "99.000";
+            return "649.000";
           },
 
           async processPayment() {
-            this.errors = { email: "", phone: "" }; // Reset error sebelum cek
-
             if (!this.name || !this.email || !this.phone) {
               alert("Harap isi semua data!");
               return;
             }
 
-            // Cek apakah email atau nomor WA sudah digunakan
             let checkResponse = await fetch("includes/checkUser.php", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -123,15 +101,10 @@
             });
 
             let checkData = await checkResponse.json();
-            console.log("Cek User:", checkData); // Debugging di console
+            console.log("Cek User:", checkData);
 
-            if (checkData.emailExists) this.errors.email = "Email sudah digunakan!";
-            if (checkData.phoneExists) this.errors.phone = "Nomor WhatsApp sudah digunakan!";
-
-            // Jika ada error, hentikan proses pembayaran
             if (checkData.emailExists || checkData.phoneExists) return;
 
-            // Jika email dan nomor WA belum digunakan, lanjutkan pembayaran
             let response = await fetch("includes/placeOrder.php", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -139,7 +112,6 @@
                 name: this.name,
                 email: this.email,
                 phone: this.phone,
-                extra_bundle: this.extraBundle,
               }),
             });
 

@@ -31,26 +31,16 @@ if (!isset($postData['name'], $postData['email'], $postData['phone'])) {
     exit;
 }
 
-// Hitung total harga berdasarkan extra bundle
-$totalHarga = 99000;
+// Harga tetap Rp 649.000
+$totalHarga = 649000;
 $item_details = [
     [
         'id' => 'product-001',
-        'price' => 99000,
+        'price' => 649000,
         'quantity' => 1,
-        'name' => 'Paket Utama'
+        'name' => 'Digital Satu Persen | NR HOUSE'
     ]
 ];
-
-if (!empty($postData['extra_bundle'])) {
-    $totalHarga += 50000;
-    $item_details[] = [
-        'id' => 'extra-bundle',
-        'price' => 50000,
-        'quantity' => 1,
-        'name' => 'Extra 3500+ Slide Infographic & 2000+ Business Templates'
-    ];
-}
 
 // Buat order ID unik
 $order_id = "ORDER-" . time();
@@ -86,6 +76,5 @@ try {
 } catch (Exception $e) {
     echo json_encode(['error' => 'Gagal mendapatkan Snap Token: ' . $e->getMessage()]);
 }
-
 
 ?>
