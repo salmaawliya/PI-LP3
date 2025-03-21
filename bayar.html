@@ -16,19 +16,16 @@
       <div>
         <label class="block">Nama</label>
         <input type="text" x-model="name" class="w-full p-2 border rounded mt-1" />
-        <p class="text-red-500 text-sm" x-show="errorName">Nama wajib diisi.</p>
       </div>
       <div class="mt-3">
         <label class="block">Email</label>
         <input type="email" x-model="email" @input="checkUser()" class="w-full p-2 border rounded mt-1" />
-        <p class="text-red-500 text-sm" x-show="errorEmail">Email wajib diisi.</p>
-        <p class="text-red-500 text-sm" x-show="emailExists">Email sudah digunakan.</p>
+        <p class="text-red-500 text-sm" x-show="errors.email" x-text="errors.email"></p>
       </div>
       <div class="mt-3">
         <label class="block">Nomor WhatsApp</label>
         <input type="text" x-model="phone" @input="checkUser()" class="w-full p-2 border rounded mt-1" />
-        <p class="text-red-500 text-sm" x-show="errorPhone">Nomor WA wajib diisi.</p>
-        <p class="text-red-500 text-sm" x-show="phoneExists">Nomor WA sudah digunakan.</p>
+        <p class="text-red-500 text-sm" x-show="errors.phone" x-text="errors.phone"></p>
       </div>
 
       <!-- Rincian Pesanan -->
@@ -44,7 +41,7 @@
           </li>
           <li class="flex justify-between font-semibold text-lg mt-2">
             <span>Total</span>
-            <span>Rp <span x-text="formattedTotal()"></span></span>
+            <span>Rp 649.000</span>
           </li>
         </ul>
       </div>
@@ -53,39 +50,24 @@
       <button @click="processPayment()" class="mt-4 w-full bg-blue-600 text-white p-2 rounded">Bayar Sekarang</button>
     </div>
 
-    <div
-      x-data="{ status: '', showNotification: false }"
-      x-init="() => {
-       let orderId = localStorage.getItem('order_id');
-       if (orderId) {
-         fetch(`includes/checkStatus.php?order_id=${orderId}`)
-           .then(res => res.json())
-           .then(data => {
-             if (data.status) {
-               status = data.status;
-               showNotification = true;
-               if (status === 'Success') {
-                 localStorage.removeItem('order_id'); // Hapus jika sukses
-               }
-             }
-           });
-       }
-     }"
-      x-show="showNotification"
-      class="fixed top-5 right-5 bg-green-500 text-white p-4 rounded shadow-lg"
-    >
-      <span x-text="'Status Pembayaran: ' + status"></span>
-    </div>
-
     <script>
       document.addEventListener("alpine:init", () => {
         Alpine.data("payment", () => ({
           name: "",
           email: "",
           phone: "",
+          errors: { email: "", phone: "" },
 
-          formattedTotal() {
-            return "649.000";
+          async checkUser() {
+            if (!this.email || !this.phone) return;
+            let response = await fetch("includes/checkUser.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: this.email, phone: this.phone }),
+            });
+            let data = await response.json();
+            this.errors.email = data.emailExists ? "Email sudah digunakan!" : "";
+            this.errors.phone = data.phoneExists ? "Nomor WhatsApp sudah digunakan!" : "";
           },
 
           async processPayment() {
@@ -94,29 +76,12 @@
               return;
             }
 
-            let checkResponse = await fetch("includes/checkUser.php", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: this.email, phone: this.phone }),
-            });
-
-            let checkData = await checkResponse.json();
-            console.log("Cek User:", checkData);
-
-            if (checkData.emailExists || checkData.phoneExists) return;
-
             let response = await fetch("includes/placeOrder.php", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                name: this.name,
-                email: this.email,
-                phone: this.phone,
-              }),
+              body: JSON.stringify({ name: this.name, email: this.email, phone: this.phone }),
             });
-
             let data = await response.json();
-            console.log("Response Midtrans:", data);
 
             if (data.snapToken) {
               localStorage.setItem("order_id", data.order_id);
